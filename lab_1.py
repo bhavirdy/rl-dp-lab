@@ -169,6 +169,41 @@ def value_iteration(env, theta=0.0001, discount_factor=1.0):
 
     return policy, V
 
+def measure_runtime(env, discount_factors, n_runs=10):
+    pi_times = []
+    vi_times = []
+
+    for gamma in discount_factors:
+        # Policy Iteration
+        pi_run_times = []
+        for _ in range(n_runs):
+            start = timeit.default_timer()
+            policy_iteration(env, discount_factor=gamma)
+            pi_run_times.append(timeit.default_timer() - start)
+        pi_times.append(np.mean(pi_run_times))
+
+        # Value Iteration
+        vi_run_times = []
+        for _ in range(n_runs):
+            start = timeit.default_timer()
+            value_iteration(env, discount_factor=gamma)
+            vi_run_times.append(timeit.default_timer() - start)
+        vi_times.append(np.mean(vi_run_times))
+
+    return pi_times, vi_times
+
+def plot_runtimes(discount_factors, pi_times, vi_times):
+    plt.figure(figsize=(8,5))
+    plt.plot(discount_factors, pi_times, marker='o', label='Policy Iteration')
+    plt.plot(discount_factors, vi_times, marker='s', label='Value Iteration')
+    plt.xscale('log')
+    plt.xlabel('Discount Factor γ')
+    plt.ylabel('Average Time (seconds)')
+    plt.title('Average Runtime vs Discount Factor')
+    plt.legend()
+    plt.grid(True)
+    plt.show()
+
 def main():
     # -----------------------------
     # Create Gridworld environment
@@ -289,6 +324,13 @@ def main():
         print("❌ Value iteration test FAILED!")
         print(e)
         print("")
+
+    # -----------------------------
+    # Plot runtimes
+    # -----------------------------
+    discount_factors = np.logspace(-0.2, 0, num=30)
+    pi_times, vi_times = measure_runtime(env, discount_factors, n_runs=10)
+    plot_runtimes(discount_factors, pi_times, vi_times)
 
 if __name__ == "__main__":
     main()
